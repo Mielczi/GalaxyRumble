@@ -56,7 +56,7 @@ class Ammo:
         self._current_ammo = self._max_ammo
 
     def add_ammo(self, amount):
-        self._current_ammo = min(self._current_ammo + amount, self._max_ammo)
+        self._current_ammo - min(self._current_ammo + amount, self._max_ammo)
 
 
 # --- DRUGI KONTRUKTOR ---
@@ -74,9 +74,6 @@ class AmmoBox:
 
     def draw(self, window):
         window.blit(self.image, (self.x_cord, self.y_cord))
-
-    def tick(self):
-        self.hitbox.topleft = (self.x_cord, self.y_cord)
 
 
 class Medkit:
@@ -189,8 +186,6 @@ class Player(pygame.sprite.Sprite):
 
     def draw(self):
         window.blit(self.image, (self.x_cord, self.y_cord))
-        ammo_text = pygame.font.SysFont('arial', 30).render(f'Amunicja: {self.ammo.current_ammo}', True, (255, 255, 255))
-        window.blit(ammo_text, (10, 170))
 
     def shoot(self):
         if self.ammo.current_ammo <= 0:
@@ -313,7 +308,7 @@ class Button:
 
 def loading_screen():
     run = True
-    loading_screen_image = pygame.image.load('loading_screen.jpg')
+    loading_screen_image = pygame.image.load('loading_screen.png')
     play_button = Button(385, 532)
 
     while run:
@@ -342,14 +337,12 @@ def hardcore():
     coin_count = 0
     enemy_clock = 0
     medkit_clock = 0
-    ammo_clock = 0
 
     points = 0
     coins = []
     meteors = []
     enemies = []
     medkits = []
-    ammo_boxes = []
     font = pygame.font.SysFont('arial', 30)
 
     while run:
@@ -358,18 +351,15 @@ def hardcore():
         coin_clock += delta_time
         enemy_clock += delta_time
         medkit_clock += delta_time
-        ammo_clock += delta_time
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    try:
-                        new_bullets = player.shoot()
-                        bullets.add(*new_bullets)
-                    except AmmoError as e:
-                        print(e)
+                    bullet = Bullet(player.x_cord + player.width // 2, player.y_cord)
+                    bullets.add(bullet)
+
         if game_over:
             window.blit(game_over_image, (0, 0))
             restart_text = font.render('Press R to Restart', True, (255, 255, 255))
@@ -383,11 +373,6 @@ def hardcore():
         keys = pygame.key.get_pressed()
         player.tick(keys)
         bullets.update()
-
-        if ammo_clock >= 10:  # co 10 sekund
-            ammo_clock = 0
-            if len(ammo_boxes) < 2:  # maksymalnie 2 pudełka na ekranie
-                ammo_boxes.append(AmmoBox.random_box())
 
         if coin_clock >= 6:
             coin_clock = 0
@@ -475,15 +460,6 @@ def hardcore():
                     break
 
             bullet.draw()
-
-            for box in ammo_boxes:
-                if player.collect_ammo_box(box):
-                    ammo_boxes.remove(box)
-                    ammo_boxes.append(AmmoBox.random_box())
-
-        for box in ammo_boxes:
-            box.draw(window)
-            box.tick()
 
         for coin in coins:
             coin.draw()
